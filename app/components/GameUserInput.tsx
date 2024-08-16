@@ -8,11 +8,11 @@ interface GameUserInputProps {
 
 const GameUserInput: React.FC<GameUserInputProps> = ({ selectedTiles, onTileRemove }) => {
   return (
-    <div className="flex items-center justify-center gap-2 py-1 px-1 bg-gray-700 rounded-sm shadow-lg w-[332px] max-w-[360px] h-16 max-h-[80px]">
+    <div className="flex items-center justify-center gap-2 p-2 m-1 bg-gray-800 rounded-sm shadow-lg w-full max-w-[600px] max-h-[160px]">
       {selectedTiles.map((tile, index) => (
         <React.Fragment key={index}>
           {index > 0 && (
-            <div className="text-white text-2xl font-bold">+</div>
+            <div className="text-white text-3xl font-bold">+</div>
           )}
           <div 
             className="w-14 h-14 bg-white rounded-sm shadow-md flex items-center justify-center cursor-pointer"

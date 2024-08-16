@@ -6,8 +6,8 @@ interface GameTileProps {
 
 const GameTile: React.FC<GameTileProps> = ({ value }) => {
   return (
-    <div className="w-14 h-14 flex items-center justify-center bg-white rounded-sm shadow-md">
-      <span className="text-2xl font-bold text-gray-800">{value}</span>
+    <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-sm shadow-md">
+      <span className="text-2xl sm:text-4xl font-bold text-gray-800">{value}</span>
     </div>
   );
 };

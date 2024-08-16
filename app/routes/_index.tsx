@@ -3,6 +3,8 @@ import HUD from '../components/HUD';
 import GameGrid from '../components/GameGrid';
 import GameUserInput from '../components/GameUserInput';
 import GameUserResult from '../components/GameUserResult';
+import MenuBar from '../components/MenuBar';
+import PauseOverlay from '../components/Overlay';
 
 export default function Index() {
   const [health, setHealth] = useState(3);
@@ -13,7 +15,8 @@ export default function Index() {
   const [usedTileIndices, setUsedTileIndices] = useState<Set<number>>(new Set());
   const [selectedTileIndices, setSelectedTileIndices] = useState<(number | undefined)[]>([undefined, undefined, undefined, undefined]);
   const isSelectionComplete = selectedTiles.every(tile => tile !== undefined);
-  
+  const [isPaused, setIsPaused] = useState(true);
+  const [overlayMessage, setOverlayMessage] = useState("Start");
 
   const resetGame = () => {
     setHealth(3);
@@ -28,8 +31,12 @@ export default function Index() {
     setHealth(prev => {
       const newHealth = prev - 1;
       if (newHealth <= 0) {
+        setOverlayMessage("Prohra :(");
+        setIsPaused(true); 
         resetGame();
-        return 3;
+      } else {
+        setOverlayMessage("Mínus jedno srdíčko");
+        setIsPaused(true); 
       }
       return newHealth;
     });
@@ -41,10 +48,12 @@ export default function Index() {
 
   const increaseLevel = () => {
     setLevel(prev => prev + 1);
-    setTime(30); 
-    setSelectedTiles([undefined, undefined, undefined, undefined]); 
+    setTime(30);
+    setSelectedTiles([undefined, undefined, undefined, undefined]);
     setIsCorrect(null);
     setUsedTileIndices(new Set());
+    setOverlayMessage(`Pokračovat na level ${level + 1}`);
+    setIsPaused(true);
   };
 
   const decreaseLevel = () => {
@@ -52,14 +61,14 @@ export default function Index() {
   };
 
   useEffect(() => {
-    if (time > 0) {
+    if (time > 0 && !isPaused) {
       const timerId = setTimeout(() => setTime(time - 1), 1000);
       return () => clearTimeout(timerId);
-    } else {
+    } else if (time <= 0) {
       decreaseHealth();
       setTime(30); 
     }
-  }, [time]);
+  }, [time, isPaused]);
 
   const handleTileSelect = (index: number, value: number) => {
     const firstEmptyIndex = selectedTiles.findIndex(tile => tile === undefined);
@@ -121,49 +130,70 @@ export default function Index() {
     }
   };
 
+  const handlePause = () => {
+    if (health === 3 && level === 1 && time === 30) {
+      setOverlayMessage("Start");
+    } else {
+      setOverlayMessage("Pauza");
+    }
+    setIsPaused(true);
+  };
+
+  const handleResume = () => {
+    setIsPaused(false);
+    setOverlayMessage("");
+  };
+
   return (
-    <div className="relative w-full h-screen bg-gray-900">
-      <HUD health={health} level={level} time={time} />
+    <div className="relative w-full h-screen bg-gray-900 flex justify-center sm:items-center">
+      <div className="w-auto max-w-2xl ">   
+          
+          <MenuBar onPause={handlePause} />
+
+          <HUD health={health} level={level} time={time} />
+          
+          <div className="flex justify-center items-center pt-20 pb-5 max-w-2xl">
+            <GameGrid level={level} onTileSelect={handleTileSelect} usedTileIndices={usedTileIndices} />
+          </div>
+          <div className="flex justify-center items-center pb-1">
+            <GameUserInput 
+              selectedTiles={selectedTiles} 
+              onTileRemove={handleTileRemove}
+            />
+          </div>
+          <div className="flex justify-center items-center pb-5">
+            <GameUserResult level={level} isCorrect={isCorrect} onCheck={calculateResult} isSelectionComplete={isSelectionComplete}/>
+          </div>
+          {isPaused && <PauseOverlay onClick={handleResume} message={overlayMessage} />}
+                  {/* <div className=" ">
+                    <button 
+                      onClick={decreaseHealth}
+                      className="px-4  bg-blue-500 text-white rounded mr-2 h-6"
+                    >
+                      Decrease Health
+                    </button>
+                    <button 
+                      onClick={increaseHealth}
+                      className="px-4  bg-green-500 text-white rounded mr-2 h-6"
+                    >
+                      Increase Health
+                    </button>
+                    <button 
+                      onClick={decreaseLevel}
+                      className="px-4  bg-yellow-500 text-white rounded h-6"
+                    >
+                      Decrease Level
+                    </button>
+                    <button 
+                      onClick={increaseLevel}
+                      className="px-4  bg-yellow-500 text-white rounded h-6"
+                    >
+                      Increase Level
+                    </button>
+                  </div>
+                  */}
+      </div> 
       
-      <div className="flex justify-center items-center pt-20 pb-10 ">
-        <GameGrid level={level} onTileSelect={handleTileSelect} usedTileIndices={usedTileIndices} />
-      </div>
-      <div className="flex justify-center items-center pb-5">
-        <GameUserInput 
-          selectedTiles={selectedTiles} 
-          onTileRemove={handleTileRemove}
-        />
-      </div>
-      <div className="flex justify-center items-center pb-5">
-        <GameUserResult level={level} isCorrect={isCorrect} onCheck={calculateResult} isSelectionComplete={isSelectionComplete}/>
-      </div>
-              {/* <div className=" ">
-                <button 
-                  onClick={decreaseHealth}
-                  className="px-4  bg-blue-500 text-white rounded mr-2 h-6"
-                >
-                  Decrease Health
-                </button>
-                <button 
-                  onClick={increaseHealth}
-                  className="px-4  bg-green-500 text-white rounded mr-2 h-6"
-                >
-                  Increase Health
-                </button>
-                <button 
-                  onClick={decreaseLevel}
-                  className="px-4  bg-yellow-500 text-white rounded h-6"
-                >
-                  Decrease Level
-                </button>
-                <button 
-                  onClick={increaseLevel}
-                  className="px-4  bg-yellow-500 text-white rounded h-6"
-                >
-                  Increase Level
-                </button>
-              </div>
-              */}
     </div>
   );
 }

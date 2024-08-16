@@ -11,10 +11,10 @@ const GameUserResult: React.FC<GameUserResultProps> = ({ level, isCorrect, onChe
   return (
     <div className="flex flex-col items-center justify-center py-5">
       <div 
-        className={`text-4xl font-bold bg-gray-800 text-white p-4 rounded-lg shadow-lg 
+        className={`text-4xl font-bold p-4 rounded-lg shadow-lg 
                     ${isSelectionComplete 
-                      ? 'cursor-pointer transition-colors' 
-                      : 'cursor-not-allowed bg-red-500 transition-colors'}`}
+                      ? 'cursor-pointer transition-colors text-gray-900 bg-white' 
+                      : 'cursor-not-allowed text-white bg-red-700 transition-colors'}`}
         onClick={() => isSelectionComplete && onCheck()}
       >
         = {level}
