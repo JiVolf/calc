@@ -3,6 +3,7 @@ import GameTile from './GameTile';
 
 interface GameGridProps {
   level: number;
+  startLevel: number;
   onTileSelect: (index: number, value: number) => void;
   usedTileIndices: Set<number>;
 }

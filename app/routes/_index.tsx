@@ -5,6 +5,10 @@ import GameUserInput from '../components/GameUserInput';
 import GameUserResult from '../components/GameUserResult';
 import MenuBar from '../components/MenuBar';
 import PauseOverlay from '../components/Overlay';
+import LandingPage from '../components/LandingPage';
+import SettingsPage from '../components/SettingsPage';
+import HighScorePage from '../components/HighScorePage';
+
 
 export default function Index() {
   const [health, setHealth] = useState(3);
@@ -17,6 +21,11 @@ export default function Index() {
   const isSelectionComplete = selectedTiles.every(tile => tile !== undefined);
   const [isPaused, setIsPaused] = useState(true);
   const [overlayMessage, setOverlayMessage] = useState("Start");
+  const [showLandingPage, setShowLandingPage] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
+  const [backgroundColor, setBackgroundColor] = useState('bg-gray-900');
+  const [showHighScore, setShowHighScore] = useState(false);
+  const [startLevel, setStartLevel] = useState(1);
 
   const resetGame = () => {
     setHealth(3);
@@ -25,6 +34,19 @@ export default function Index() {
     setSelectedTiles([undefined, undefined, undefined, undefined]);
     setIsCorrect(null);
     setUsedTileIndices(new Set());
+  };
+
+  const handleCheckpointSelect = (selectedLevel: number) => {
+    setStartLevel(selectedLevel);
+    setLevel(selectedLevel);
+    setShowHighScore(false);
+    setShowLandingPage(false);
+    setHealth(3);
+    setTime(30);
+    setSelectedTiles([undefined, undefined, undefined, undefined]);
+    setIsCorrect(null);
+    setUsedTileIndices(new Set());
+    setIsPaused(false);
   };
 
   const decreaseHealth = () => {
@@ -47,8 +69,12 @@ export default function Index() {
   };
 
   const increaseLevel = () => {
-    setLevel(prev => prev + 1);
-    setTime(30);
+    setLevel(prev => {
+      const newLevel = prev + 1;
+      updateHighScores(newLevel);
+      return newLevel;
+    });
+    setTime(30 + level);
     setSelectedTiles([undefined, undefined, undefined, undefined]);
     setIsCorrect(null);
     setUsedTileIndices(new Set());
@@ -144,55 +170,161 @@ export default function Index() {
     setOverlayMessage("");
   };
 
-  return (
-    <div className="relative w-full h-screen bg-gray-900 flex justify-center sm:items-center">
-      <div className="w-auto max-w-2xl ">   
-          
-          <MenuBar onPause={handlePause} />
+  const handleHome = () => {
+    setIsPaused(true);
+    setShowLandingPage(true);
+    resetGame();
+  };
 
-          <HUD health={health} level={level} time={time} />
+  const handleNewGame = (startLevel: number) => {
+    setShowLandingPage(false);
+    setIsPaused(false);
+    setStartLevel(startLevel);
+    setLevel(startLevel);
+    setHealth(3);
+    setTime(30);
+    setSelectedTiles([undefined, undefined, undefined, undefined]);
+    setIsCorrect(null);
+    setUsedTileIndices(new Set());
+  };
+
+  const handleClan = () => {
+    alert('TBD!');
+  };
+
+  const handleSettings = () => {
+    setShowSettings(true);
+    setShowLandingPage(false);
+  };
+
+  const handleBackFromSettings = () => {
+    setShowSettings(false);
+    setShowLandingPage(true);
+    const savedSettings = localStorage.getItem('appSettings');
+    if (savedSettings) {
+      const parsedSettings = JSON.parse(savedSettings);
+      setBackgroundColor(getBackgroundColor(parsedSettings.background));
+    }
+  };
+
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('appSettings');
+    if (savedSettings) {
+      const parsedSettings = JSON.parse(savedSettings);
+      setBackgroundColor(getBackgroundColor(parsedSettings.background));
+    }
+  }, []);
+
+  const getBackgroundColor = (setting: string) => {
+    switch (setting) {
+      case 'blue':
+        return 'bg-blue-900';
+      case 'red':
+        return 'bg-red-900';
+      default:
+        return 'bg-gray-900';
+    }
+  };
+
+
+  interface HighScore {
+    username: string;
+    level: number;
+  }
+
+  const updateHighScores = (newLevel: number) => {
+    const savedSettings = localStorage.getItem('appSettings');
+    const username = savedSettings ? JSON.parse(savedSettings).nickname || 'Anonymous' : 'Anonymous';
+    const savedHighScores = localStorage.getItem('highScores');
+    let highScores = savedHighScores ? JSON.parse(savedHighScores) : [];
+    const existingScoreIndex = highScores.findIndex((score: HighScore) => score.username === username);
+    if (existingScoreIndex !== -1) {
+      if (newLevel > highScores[existingScoreIndex].level) {
+        highScores[existingScoreIndex].level = newLevel;
+      }
+    } else {
+      highScores.push({ username, level: newLevel });
+    }
+    highScores.sort((a: HighScore, b: HighScore) => b.level - a.level);
+    highScores = highScores.slice(0, 10);
+    localStorage.setItem('highScores', JSON.stringify(highScores));
+  };
+
+  const handleHighScore = () => {
+    setShowHighScore(true);
+    setShowLandingPage(false);
+  };
+
+  const handleBackFromHighScore = () => {
+    setShowHighScore(false);
+    setShowLandingPage(true);
+  };
+
+  return (
+    <div className={`relative w-full h-screen ${backgroundColor} flex justify-center sm:items-center`}>
+      {showSettings ? (
+        <SettingsPage onBack={handleBackFromSettings} />
+      ) : showHighScore ? (
+        <HighScorePage 
+          onBack={handleBackFromHighScore} 
           
-          <div className="flex justify-center items-center pt-20 pb-5 max-w-2xl">
-            <GameGrid level={level} onTileSelect={handleTileSelect} usedTileIndices={usedTileIndices} />
-          </div>
-          <div className="flex justify-center items-center pb-1">
-            <GameUserInput 
-              selectedTiles={selectedTiles} 
-              onTileRemove={handleTileRemove}
-            />
-          </div>
-          <div className="flex justify-center items-center pb-5">
-            <GameUserResult level={level} isCorrect={isCorrect} onCheck={calculateResult} isSelectionComplete={isSelectionComplete}/>
-          </div>
-          {isPaused && <PauseOverlay onClick={handleResume} message={overlayMessage} />}
-                  {/* <div className=" ">
-                    <button 
-                      onClick={decreaseHealth}
-                      className="px-4  bg-blue-500 text-white rounded mr-2 h-6"
-                    >
-                      Decrease Health
-                    </button>
-                    <button 
-                      onClick={increaseHealth}
-                      className="px-4  bg-green-500 text-white rounded mr-2 h-6"
-                    >
-                      Increase Health
-                    </button>
-                    <button 
-                      onClick={decreaseLevel}
-                      className="px-4  bg-yellow-500 text-white rounded h-6"
-                    >
-                      Decrease Level
-                    </button>
-                    <button 
-                      onClick={increaseLevel}
-                      className="px-4  bg-yellow-500 text-white rounded h-6"
-                    >
-                      Increase Level
-                    </button>
-                  </div>
-                  */}
-      </div> 
+        />
+      ) : showLandingPage ? (
+        <LandingPage 
+          onNewGame={handleNewGame} 
+          onHighScore={handleHighScore} 
+          onClan={handleClan} 
+          onSettings={handleSettings} 
+        />
+      ) : (
+        <div className="w-auto max-w-2xl ">   
+            
+            <MenuBar onPause={handlePause} onHome={handleHome}/>
+
+            <HUD health={health} level={level} time={time} />
+            
+            <div className="flex justify-center items-center pt-20 pb-5 max-w-2xl">
+              <GameGrid level={level} startLevel={startLevel} onTileSelect={handleTileSelect} usedTileIndices={usedTileIndices} />
+            </div>
+            <div className="flex justify-center items-center pb-1">
+              <GameUserInput 
+                selectedTiles={selectedTiles} 
+                onTileRemove={handleTileRemove}
+              />
+            </div>
+            <div className="flex justify-center items-center pb-5">
+              <GameUserResult level={level} isCorrect={isCorrect} onCheck={calculateResult} isSelectionComplete={isSelectionComplete}/>
+            </div>
+            {isPaused && <PauseOverlay onClick={handleResume} message={overlayMessage} />}
+                     {/* <div className=" ">
+                      <button 
+                        onClick={decreaseHealth}
+                        className="px-4  bg-blue-500 text-white rounded mr-2 h-6"
+                      >
+                        Decrease Health
+                      </button>
+                      <button 
+                        onClick={increaseHealth}
+                        className="px-4  bg-green-500 text-white rounded mr-2 h-6"
+                      >
+                        Increase Health
+                      </button>
+                      <button 
+                        onClick={decreaseLevel}
+                        className="px-4  bg-yellow-500 text-white rounded h-6"
+                      >
+                        Decrease Level
+                      </button>
+                      <button 
+                        onClick={increaseLevel}
+                        className="px-4  bg-yellow-500 text-white rounded h-6"
+                      >
+                        Increase Level
+                      </button>
+                    </div>
+                    */}
+        </div> 
+      )}
       
     </div>
   );
