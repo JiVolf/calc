@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import GameTile from './GameTile';
+import { playSound } from '../utils/AudioUtils';
 
 interface GameGridProps {
   level: number;
@@ -25,6 +26,13 @@ const hasValidCombination = (grid: number[], target: number): boolean => {
 const GameGrid: React.FC<GameGridProps> = ({ level, onTileSelect, usedTileIndices }) => {
   const [tiles, setTiles] = useState<number[]>([]);
 
+  const handleTileSelect = (index: number, value: number) => {
+    if (!usedTileIndices.has(index)) {
+      playSound('select');
+      onTileSelect(index, value);
+    }
+  };
+
   useEffect(() => {
     const generateValidGrid = () => {
       const numbers = Array.from({ length: level + 1 }, (_, i) => i);
@@ -47,7 +55,7 @@ const GameGrid: React.FC<GameGridProps> = ({ level, onTileSelect, usedTileIndice
       {tiles.map((value, index) => (
         <div
           key={index}
-          onClick={() => !usedTileIndices.has(index) && onTileSelect(index, value)}
+          onClick={() => handleTileSelect(index, value)}
           className={`w-full h-full flex items-center justify-center bg-gray-800 rounded-sm shadow-md cursor-pointer ${
             usedTileIndices.has(index) ? 'opacity-50 cursor-not-allowed' : ''
           }`}
