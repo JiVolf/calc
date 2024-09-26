@@ -8,9 +8,9 @@ interface SettingsPageProps {
 const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
   const [nickname, setNickname] = useState('');
   const [soundOn, setSoundOn] = useState(true);
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState('cz');
   const [background, setBackground] = useState('default');
-  const [country, setCountry] = useState('Option 1');
+  const [country, setCountry] = useState('CZ');
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('appSettings');
@@ -18,9 +18,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
       const parsedSettings = JSON.parse(savedSettings);
       setNickname(parsedSettings.nickname || '');
       setSoundOn(parsedSettings.soundOn ?? true);
-      setLanguage(parsedSettings.language || 'en');
+      setLanguage(parsedSettings.language || 'cz');
       setBackground(parsedSettings.background || 'default');
-      setCountry(parsedSettings.country || 'Option 1');
+      setCountry(parsedSettings.country || 'CZ');
     }
   }, []);
 
@@ -114,7 +114,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
             onChange={(e) => setCountry(e.target.value)}
             className="w-full p-2 bg-gray-800 text-yellow-500 rounded"
           >
-            <option value="Option 1">Česká Republika</option>
+            <option value="CZ">Czech Republic 🇨🇿</option>
+            <option value="US">United States 🇺🇸</option>
+            <option value="GB">United Kingdom 🇬🇧</option>
+            <option value="DE">Germany 🇩🇪</option>
           </select>
         </div>
       </div>

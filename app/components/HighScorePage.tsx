@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import CountryFlag from '../components/CountryFlag';
 
 interface HighScore {
   username: string;
@@ -9,11 +10,6 @@ interface HighScore {
 interface HighScorePageProps {
   onBack: () => void;
 }
-
-const CountryFlag: React.FC<{ country: string }> = ({ country }) => {
-  return <span className="mr-2">{country === 'Czech Republic' ? '🇨🇿' : '🏳️'}</span>;
-};
-
 const HighScorePage: React.FC<HighScorePageProps> = ({ onBack }) => {
   const [highScores, setHighScores] = useState<HighScore[]>([]);
 

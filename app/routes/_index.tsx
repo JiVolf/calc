@@ -8,6 +8,7 @@ import PauseOverlay from '../components/Overlay';
 import LandingPage from '../components/LandingPage';
 import SettingsPage from '../components/SettingsPage';
 import HighScorePage from '../components/HighScorePage';
+import SumOverlay from '../components/SumOverlay';
 
 
 export default function Index() {
@@ -26,15 +27,24 @@ export default function Index() {
   const [backgroundColor, setBackgroundColor] = useState('bg-gray-900');
   const [showHighScore, setShowHighScore] = useState(false);
   const [startLevel, setStartLevel] = useState(1);
+  const [isGameOver, setIsGameOver] = useState(false); 
+  const [showSumOverlay, setShowSumOverlay] = useState(false);  // Controls the visibility of the sum overlay
+  const [sum, setSum] = useState(0);  // Holds the sum of selected tiles
 
   const resetGame = () => {
     setHealth(3);
     setLevel(1);
     setTime(30);
     setSelectedTiles([undefined, undefined, undefined, undefined]);
+    setSelectedTileIndices([undefined, undefined, undefined, undefined]);
     setIsCorrect(null);
     setUsedTileIndices(new Set());
   };
+  useEffect(() => {
+    console.log('Selected Tiles:', selectedTiles);
+    console.log('Selected Tile Indices:', selectedTileIndices);
+    console.log('Used Tile Indices:', usedTileIndices);
+  }, [selectedTiles, selectedTileIndices, usedTileIndices]);
 
   const handleCheckpointSelect = (selectedLevel: number) => {
     setStartLevel(selectedLevel);
@@ -55,10 +65,14 @@ export default function Index() {
       if (newHealth <= 0) {
         setOverlayMessage("Prohra :(");
         setIsPaused(true); 
-        resetGame();
+        setIsGameOver(true);
       } else {
         setOverlayMessage("Mínus jedno srdíčko");
         setIsPaused(true); 
+        setSelectedTiles([undefined, undefined, undefined, undefined]);
+        setSelectedTileIndices([undefined, undefined, undefined, undefined]);
+        setUsedTileIndices(new Set());
+        setIsCorrect(null);
       }
       return newHealth;
     });
@@ -76,6 +90,7 @@ export default function Index() {
     });
     setTime(30 + level);
     setSelectedTiles([undefined, undefined, undefined, undefined]);
+    setSelectedTileIndices([undefined, undefined, undefined, undefined]);
     setIsCorrect(null);
     setUsedTileIndices(new Set());
     setOverlayMessage(`Pokračovat na level ${level + 1}`);
@@ -98,20 +113,35 @@ export default function Index() {
 
   const handleTileSelect = (index: number, value: number) => {
     const firstEmptyIndex = selectedTiles.findIndex(tile => tile === undefined);
+  
     if (firstEmptyIndex !== -1 && !usedTileIndices.has(index)) {
       setSelectedTiles(prev => {
         const newTiles = [...prev];
         newTiles[firstEmptyIndex] = value;
+  
+        const sum = newTiles.reduce((acc: number, tile) => acc + (tile || 0), 0);
+  
+        setSum(sum); 
+        setShowSumOverlay(true); 
+  
+        setTimeout(() => {
+          setShowSumOverlay(false);
+        }, 1000);  
+  
         return newTiles;
       });
+  
       setSelectedTileIndices(prev => {
         const newIndices = [...prev];
         newIndices[firstEmptyIndex] = index;
         return newIndices;
       });
+  
       setUsedTileIndices(prev => new Set(prev).add(index));
     }
   };
+  
+
 
   const handleTileRemove = (selectionIndex: number) => {
     setSelectedTiles(prev => {
@@ -163,6 +193,11 @@ export default function Index() {
       setOverlayMessage("Pauza");
     }
     setIsPaused(true);
+  };
+
+  const handleGameOverClick = () => {
+    setIsGameOver(false);
+    setShowLandingPage(true);
   };
 
   const handleResume = () => {
@@ -284,7 +319,7 @@ export default function Index() {
             <HUD health={health} level={level} time={time} />
             
             <div className="flex justify-center items-center pt-20 pb-5 max-w-2xl">
-              <GameGrid level={level} startLevel={startLevel} onTileSelect={handleTileSelect} usedTileIndices={usedTileIndices} />
+              <GameGrid level={level} startLevel={startLevel} onTileSelect={handleTileSelect} onTileRemove={handleTileRemove} usedTileIndices={usedTileIndices} selectedTileIndices={selectedTileIndices}/>
             </div>
             <div className="flex justify-center items-center pb-1">
               <GameUserInput 
@@ -295,8 +330,21 @@ export default function Index() {
             <div className="flex justify-center items-center pb-5">
               <GameUserResult level={level} isCorrect={isCorrect} onCheck={calculateResult} isSelectionComplete={isSelectionComplete}/>
             </div>
-            {isPaused && <PauseOverlay onClick={handleResume} message={overlayMessage} />}
-                     {/* <div className=" ">
+            {isPaused && !isGameOver && (
+              <PauseOverlay 
+                onClick={handleResume}  
+                message={overlayMessage} 
+              />
+            )}
+
+            {isGameOver && (
+              <PauseOverlay 
+                onClick={handleGameOverClick}  
+                message={overlayMessage}      
+              />
+            )}
+            <SumOverlay sum={sum} visible={showSumOverlay} duration={1} />                     
+            {/* <div className=" ">
                       <button 
                         onClick={decreaseHealth}
                         className="px-4  bg-blue-500 text-white rounded mr-2 h-6"

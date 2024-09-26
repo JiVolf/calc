@@ -6,7 +6,9 @@ interface GameGridProps {
   level: number;
   startLevel: number;
   onTileSelect: (index: number, value: number) => void;
+  onTileRemove: (selectionIndex: number) => void;  // Change the parameter to be the selection index
   usedTileIndices: Set<number>;
+  selectedTileIndices: (number | undefined)[];     // Track selected tile indices
 }
 
 const getCombinations = (arr: number[], length: number): number[][] => {
@@ -23,13 +25,21 @@ const hasValidCombination = (grid: number[], target: number): boolean => {
   );
 };
 
-const GameGrid: React.FC<GameGridProps> = ({ level, onTileSelect, usedTileIndices }) => {
+const GameGrid: React.FC<GameGridProps> = ({ level, onTileSelect, onTileRemove, usedTileIndices, selectedTileIndices }) => {
   const [tiles, setTiles] = useState<number[]>([]);
 
-  const handleTileSelect = (index: number, value: number) => {
-    if (!usedTileIndices.has(index)) {
+  const handleTileSelectOrRemove = (index: number, value: number) => {
+    // Find the index of the tile in the selectedTileIndices array
+    const selectionIndex = selectedTileIndices.indexOf(index);
+
+    if (selectionIndex !== -1) {
+      // If the tile is already selected, remove it
+      playSound('unselect');
+      onTileRemove(selectionIndex); // Call onTileRemove with the correct selection index
+    } else {
+      // If the tile is not selected, select it
       playSound('select');
-      onTileSelect(index, value);
+      onTileSelect(index, value); // Call onTileSelect if it's not selected
     }
   };
 
@@ -55,9 +65,9 @@ const GameGrid: React.FC<GameGridProps> = ({ level, onTileSelect, usedTileIndice
       {tiles.map((value, index) => (
         <div
           key={index}
-          onClick={() => handleTileSelect(index, value)}
+          onClick={() => handleTileSelectOrRemove(index, value)} // Use the new function for both select and remove
           className={`w-full h-full flex items-center justify-center bg-gray-800 rounded-sm shadow-md cursor-pointer ${
-            usedTileIndices.has(index) ? 'opacity-50 cursor-not-allowed' : ''
+            usedTileIndices.has(index) ? 'opacity-50' : ''
           }`}
         >
           <GameTile value={value} />

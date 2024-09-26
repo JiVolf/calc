@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { playSound } from '../utils/AudioUtils';
 
 interface LandingPageProps {
   onNewGame: (startLevel: number) => void;
@@ -37,6 +38,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNewGame, onHighScore, onCla
     setAvailableCheckpoints(checkpoints);
   }, []);
 
+  const handleButtonClick = (action: () => void) => {
+    playSound('menubutton');
+    action();
+  };
+
   return (
     <div className="flex flex-col items-center justify-center h-screen">
       <h1 className="text-yellow-500 text-6xl font-bold mb-16">Číselník</h1>
@@ -59,25 +65,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNewGame, onHighScore, onCla
           </div>
         )}
         <button
-          onClick={() => onNewGame(selectedCheckpoint)}
+          onClick={() => handleButtonClick(() => onNewGame(selectedCheckpoint))}
           className="bg-yellow-500 text-gray-900 px-8 py-4 rounded text-2xl font-bold shadow-lg"
         >
           Nová Hra
         </button>
         <button
-          onClick={onHighScore}
+          onClick={() => handleButtonClick(onHighScore)}
           className="bg-yellow-500 text-gray-900 px-8 py-4 rounded text-2xl font-bold shadow-lg"
         >
           High Score
         </button>
         <button
-          onClick={onClan}
+          onClick={() => handleButtonClick(onClan)}
           className="bg-yellow-500 text-gray-900 px-8 py-4 rounded text-2xl font-bold shadow-lg"
         >
           Klan
         </button>
         <button
-          onClick={onSettings}
+          onClick={() => handleButtonClick(onSettings)}
           className="bg-yellow-500 text-gray-900 px-8 py-4 rounded text-2xl font-bold shadow-lg"
         >
           Nastavení

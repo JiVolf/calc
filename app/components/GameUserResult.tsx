@@ -21,7 +21,7 @@ const GameUserResult: React.FC<GameUserResultProps> = ({ level, isCorrect, onChe
       </div>
       {isCorrect !== null && (
         <div className={`mt-4 text-2xl font-bold ${isCorrect ? 'text-green-500' : 'text-red-500'}`}>
-          {isCorrect ? 'Správně!' : 'Špatně!'}
+          
         </div>
       )}
     </div>
